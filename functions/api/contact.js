@@ -77,7 +77,7 @@ const validateToken = async (env, token, ip) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.success; // Returns true or false
+  return response.success;
 }
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
@@ -87,7 +87,12 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   formData.append("to", env.MAILGUN_TO);
   formData.append('h:Reply-To' , name + " <" + email + ">");
   formData.append("subject", name + " - " + subject);
-  formData.append("html", "<b>" + name + "</b><br>" + email + "<br><br><b>" + subject + "</b><br><br>" + message);
+  formData.append("html", "<b>" + name + "</b><br>" +
+                  email + "<br><br>" +
+                  "<b>" + subject + "</b><br><br>" +
+                  message + "<br><br>" +
+                  "---<br>" +
+                  "<i>This message was sent from your website's contact form</i>");
 
   const url = `https://${env.MAILGUN_BASE_URL}/v3/${env.MAILGUN_DOMAIN}/messages`;
   const options = {
@@ -99,5 +104,5 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.message === 'Queued. Thank you.'; // Returns true or false
+  return response.message === 'Queued. Thank you.';
 }
