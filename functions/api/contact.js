@@ -106,3 +106,43 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   const response = await sendRequest(url, options);
   return response.message === 'Queued. Thank you.';
 }
+
+const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
+  const url = "https://api.sendgrid.com/v3/mail/send";
+  const body = {
+    personalizations: [
+      {
+        to: [{ email: env.SENDGRID_TO }],
+        subject: `${name} - ${subject}`,
+      },
+    ],
+    from: { email: env.SENDGRID_FROM },
+    reply_to: { email: email, name: name },
+    content: [
+      {
+        type: "text/html",
+        value: `
+          <b>${name}</b><br>
+          ${email}<br><br>
+          <b>${subject}</b><br><br>
+          ${message}<br><br>
+          ---<br>
+          <i>This message was sent from your website's contact form</i>
+        `,
+      },
+    ],
+  };
+
+  const options = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  };
+
+  const response = await sendRequest(url, options);
+  return response.statusCode === 202;
+};
+
