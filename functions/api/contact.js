@@ -42,56 +42,26 @@ const handleRequest = async ({ request, env }) => {
   let ip = request.headers.get('CF-Connecting-IP');
 
   if (!name || !email || !subject || !message) {
-    return jsonResponse(
-      {
-        message: 'Missing required fields',
-        formData: Object.fromEntries(sanitizedData.entries()),
-      },
-      400,
-    );
+    return jsonResponse({ message: 'Missing required fields' }, 400);
   }
 
   const isTokenValid = await validateToken(env, token, ip);
   if (!isTokenValid) {
-    return jsonResponse(
-      {
-        message: 'Invalid token',
-        formData: Object.fromEntries(sanitizedData.entries()),
-      },
-      403,
-    );
+    return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithMailgun(
-    env,
-    name,
-    email,
-    subject,
-    message,
-  );
+  const isEmailSent = await sendEmailWithMailgun(env, name, email, subject, message);
   if (!isEmailSent) {
-    return jsonResponse(
-      {
-        message: 'Error sending message',
-        formData: Object.fromEntries(sanitizedData.entries()),
-      },
-      500,
-    );
+    return jsonResponse({ message: 'Error sending message' }, 500);
   }
 
-  return jsonResponse(
-    {
-      message: 'Message sent successfully',
-      formData: Object.fromEntries(sanitizedData.entries()),
-    },
-    200,
-  );
+  return jsonResponse({ message: 'Message sent successfully' }, 200);
 };
 
 const sendRequest = async (url, options) => {
   const response = await fetch(url, options);
   const data = await response.json();
-  return { success: response.ok, status: response.status, data: data };
+  return data;
 };
 
 const validateToken = async (env, token, ip) => {
@@ -107,7 +77,7 @@ const validateToken = async (env, token, ip) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.data.success;
+  return response.success;
 };
 
 const formatEmailBody = (name, email, subject, message) => {
@@ -122,15 +92,27 @@ const formatEmailBody = (name, email, subject, message) => {
 };
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
-  // Mailgun API: https://documentation.mailgun.com/en/latest/api-sending.html#sending
-  // Mailgun API URI: https://api.mailgun.net/v3/<YOUR_DOMAIN>/messages
   const formData = new FormData();
   formData.append('from', env.MAILGUN_FROM);
   formData.append('h:Sender', env.MAILGUN_FROM);
   formData.append('to', env.MAILGUN_TO);
   formData.append('h:Reply-To', name + ' <' + email + '>');
   formData.append('subject', name + ' - ' + subject);
-  formData.append('html', formatEmailBody(name, email, subject, message));
+  formData.append(
+    'html',
+    '<b>' +
+      name +
+      '</b><br>' +
+      email +
+      '<br><br>' +
+      '<b>' +
+      subject +
+      '</b><br><br>' +
+      message +
+      '<br><br>' +
+      '---<br>' +
+      "<i>This message was sent from your website's contact form</i>",
+  );
 
   const url = env.MAILGUN_API_URI;
   const options = {
@@ -143,39 +125,5 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response;
-};
-
-const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
-  // SendGrid v3 API: https://sendgrid.com/docs/API_Reference/api_v3.html
-  // SendGrid v3 API URI: https://api.sendgrid.com/v3/mail/send
-  const url = env.SENDGRID_API_URI;
-  const body = JSON.stringify({
-    personalizations: [
-      {
-        to: [{ email: env.SENDGRID_TO }],
-        subject: `${name} - ${subject}`,
-      },
-    ],
-    from: { email: env.SENDGRID_FROM },
-    reply_to: { email: email, name: name },
-    content: [
-      {
-        type: 'text/html',
-        value: formatEmailBody(name, email, subject, message),
-      },
-    ],
-  });
-
-  const options = {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: body,
-  };
-
-  const response = await sendRequest(url, options);
-  return response;
+  return response.message === 'Queued. Thank you.';
 };
