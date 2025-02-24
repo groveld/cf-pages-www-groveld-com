@@ -50,7 +50,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithMailgun(env, name, email, subject, message);
+  const isEmailSent = await sendEmailWithSendGrid(env, name, email, subject, message);
   if (!isEmailSent) {
     return jsonResponse({ message: 'Error sending message' }, 500);
   }
@@ -107,6 +107,38 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
       Authorization: `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`,
     },
     body: formData,
+  };
+
+  const response = await sendRequest(url, options);
+  return response.message === 'Queued. Thank you.';
+};
+
+const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
+  const url = env.SENDGRID_API_URI;
+  const body = JSON.stringify({
+    personalizations: [
+      {
+        to: [{ email: env.SENDGRID_TO }],
+        subject: `${name} - ${subject}`,
+      },
+    ],
+    from: { email: env.SENDGRID_FROM },
+    reply_to: { email: email, name: name },
+    content: [
+      {
+        type: 'text/html',
+        value: formatEmailBody(name, email, subject, message),
+      },
+    ],
+  });
+
+  const options = {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: body,
   };
 
   const response = await sendRequest(url, options);
