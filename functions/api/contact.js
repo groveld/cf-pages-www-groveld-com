@@ -118,11 +118,12 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
   const body = JSON.stringify({
     personalizations: [
       {
-        to: [{ email: env.SENDGRID_TO }],
+        // send email to SENDGRID_TO and Martin
+        to: [{ email: env.SENDGRID_TO }, { email: 'groveld@gmail.com', name: 'Zebrapaardje' }],
         subject: `${name} - ${subject}`,
       },
     ],
-    from: { email: env.MAILGUN_FROM },
+    from: { email: 'info@huurdersverenigingsneek.nl', name: 'Huurdersvereniging Sneek' },
     reply_to: { email: email, name: name },
     content: [
       {
