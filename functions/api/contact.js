@@ -1,3 +1,19 @@
+// SENDGRID_API_KEY
+// SENDGRID_API_URI
+// SENDGRID_FROM_EMAIL
+// SENDGRID_FROM_NAME
+// SENDGRID_TO_EMAIL
+// SENDGRID_TO_NAME
+
+// MAILGUN_API_KEY
+// MAILGUN_API_URI
+// MAILGUN_FROM_EMAIL
+// MAILGUN_FROM_NAME
+// MAILGUN_TO_EMAIL
+// MAILGUN_TO_NAME
+
+// Usage: https://yourdomain.com/api/contact
+
 export const onRequestPost = async context => {
   try {
     return await handleRequest(context);
@@ -93,9 +109,9 @@ const formatEmailBody = (name, email, subject, message) => {
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   const formData = new FormData();
-  formData.append('from', env.MAILGUN_FROM);
-  formData.append('h:Sender', env.MAILGUN_FROM);
-  formData.append('to', env.MAILGUN_TO);
+  formData.append('from', env.MAILGUN_FROM_NAME + ' <' + env.MAILGUN_FROM_EMAIL + '>');
+  formData.append('h:Sender', env.MAILGUN_FROM_NAME + ' <' + env.MAILGUN_FROM_EMAIL + '>');
+  formData.append('to', env.MAILGUN_TO_NAME + ' <' + env.MAILGUN_TO_EMAIL + '>');
   formData.append('h:Reply-To', name + ' <' + email + '>');
   formData.append('subject', name + ' - ' + subject);
   formData.append('html', formatEmailBody(name, email, subject, message));
@@ -118,12 +134,11 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
   const body = JSON.stringify({
     personalizations: [
       {
-        // send email to SENDGRID_TO and Martin
-        to: [{ email: env.SENDGRID_TO }, { email: 'groveld@gmail.com', name: 'Zebrapaardje' }],
+        to: [{ email: env.SENDGRID_TO_EMAIL, name: env.SENDGRID_TO_NAME }],
         subject: `${name} - ${subject}`,
       },
     ],
-    from: { email: 'info@huurdersverenigingsneek.nl', name: 'Huurdersvereniging Sneek' },
+    from: { email: env.SENDGRID_FROM_EMAIL, name: env.SENDGRID_FROM_NAME },
     reply_to: { email: email, name: name },
     content: [
       {
