@@ -98,21 +98,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   formData.append('to', env.MAILGUN_TO);
   formData.append('h:Reply-To', name + ' <' + email + '>');
   formData.append('subject', name + ' - ' + subject);
-  formData.append(
-    'html',
-    '<b>' +
-      name +
-      '</b><br>' +
-      email +
-      '<br><br>' +
-      '<b>' +
-      subject +
-      '</b><br><br>' +
-      message +
-      '<br><br>' +
-      '---<br>' +
-      "<i>This message was sent from your website's contact form</i>",
-  );
+  formData.append('html', formatEmailBody(name, email, subject, message));
 
   const url = env.MAILGUN_API_URI;
   const options = {
