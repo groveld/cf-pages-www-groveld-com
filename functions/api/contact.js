@@ -42,12 +42,24 @@ const handleRequest = async ({ request, env }) => {
   let ip = request.headers.get('CF-Connecting-IP');
 
   if (!name || !email || !subject || !message) {
-    return jsonResponse({ message: 'Missing required fields' }, 400);
+    return jsonResponse(
+      {
+        message: 'Missing required fields',
+        formData: Object.fromEntries(sanitizedData.entries()),
+      },
+      400,
+    );
   }
 
   const isTokenValid = await validateToken(env, token, ip);
   if (!isTokenValid) {
-    return jsonResponse({ message: 'Invalid token' }, 403);
+    return jsonResponse(
+      {
+        message: 'Invalid token',
+        formData: Object.fromEntries(sanitizedData.entries()),
+      },
+      403,
+    );
   }
 
   const isEmailSent = await sendEmailWithMailgun(
@@ -58,16 +70,28 @@ const handleRequest = async ({ request, env }) => {
     message,
   );
   if (!isEmailSent) {
-    return jsonResponse({ message: 'Error sending message' }, 500);
+    return jsonResponse(
+      {
+        message: 'Error sending message',
+        formData: Object.fromEntries(sanitizedData.entries()),
+      },
+      500,
+    );
   }
 
-  return jsonResponse({ message: 'Message sent successfully' }, 200);
+  return jsonResponse(
+    {
+      message: 'Message sent successfully',
+      formData: Object.fromEntries(sanitizedData.entries()),
+    },
+    200,
+  );
 };
 
 const sendRequest = async (url, options) => {
   const response = await fetch(url, options);
   const data = await response.json();
-  return data;
+  return { success: response.ok, status: response.status, data: data };
 };
 
 const validateToken = async (env, token, ip) => {
@@ -83,7 +107,7 @@ const validateToken = async (env, token, ip) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.success;
+  return response.data.success;
 };
 
 const formatEmailBody = (name, email, subject, message) => {
@@ -119,7 +143,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.message === 'Queued. Thank you.';
+  return response;
 };
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
@@ -153,5 +177,5 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.statusCode === 202;
+  return response;
 };
