@@ -66,7 +66,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithSendGrid(env, name, email, subject, message);
+  const isEmailSent = await sendEmailWithMailgun(env, name, email, subject, message);
   if (!isEmailSent) {
     return jsonResponse({ message: 'Error sending message' }, 500);
   }
