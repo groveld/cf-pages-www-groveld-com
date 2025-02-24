@@ -52,8 +52,7 @@ const handleRequest = async ({ request, env }) => {
 
   const isEmailSent = await sendEmailWithSendGrid(env, name, email, subject, message);
   if (!isEmailSent) {
-    // return jsonResponse({ message: 'Error sending message' }, 500);
-    return jsonResponse({ message: `FROM: ${env.MAILGUN_FROM}` }, 500);
+    return jsonResponse({ message: 'Error sending message' }, 500);
   }
 
   return jsonResponse({ message: 'Message sent successfully' }, 200);
@@ -83,6 +82,7 @@ const validateToken = async (env, token, ip) => {
 
 const formatEmailBody = (name, email, subject, message) => {
   return `
+    <b>FROM: ${env.MAILGUN_FROM}</b><br>
     <b>${name}</b><br>
     ${email}<br><br>
     <b>${subject}</b><br><br>
