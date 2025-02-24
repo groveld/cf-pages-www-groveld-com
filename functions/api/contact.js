@@ -50,7 +50,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithMailgun(
+  const isEmailSent = await sendEmailWithSendGrid(
     env,
     name,
     email,
@@ -108,7 +108,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   formData.append('subject', name + ' - ' + subject);
   formData.append('html', formatEmailBody(name, email, subject, message));
 
-  const url = env.MAILGUN_API_URL;
+  const url = env.MAILGUN_API_URI;
   const options = {
     method: 'POST',
     headers: {
@@ -125,7 +125,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
   // SendGrid v3 API: https://sendgrid.com/docs/API_Reference/api_v3.html
   // SendGrid v3 API URI: https://api.sendgrid.com/v3/mail/send
-  const url = env.SENDGRID_API_URL;
+  const url = env.SENDGRID_API_URI;
   const body = JSON.stringify({
     personalizations: [
       {
