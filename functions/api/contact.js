@@ -1,30 +1,30 @@
-export const onRequestPost = async (context) => {
+export const onRequestPost = async context => {
   try {
     return await handleRequest(context);
   } catch (err) {
     return new Response('Something went wrong', { status: 500 });
   }
-}
+};
 
-const sanitizeInput = (input) => {
+const sanitizeInput = input => {
   const map = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#039;',
-    '\n': '<br>'
+    '\n': '<br>',
   };
 
-  return String(input).replace(/[&<>"'\n]/g, (m) => map[m]);
-}
+  return String(input).replace(/[&<>"'\n]/g, m => map[m]);
+};
 
 const jsonResponse = (data, status = 200) => {
   return new Response(JSON.stringify(data), {
     status: status,
     headers: { 'Content-Type': 'application/json' },
   });
-}
+};
 
 const handleRequest = async ({ request, env }) => {
   let formData = await request.formData();
@@ -50,53 +50,67 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithSendGrid(env, name, email, subject, message);
+  const isEmailSent = await sendEmailWithSendGrid(
+    env,
+    name,
+    email,
+    subject,
+    message,
+  );
   if (!isEmailSent) {
     return jsonResponse({ message: 'Error sending message' }, 500);
   }
 
   return jsonResponse({ message: 'Message sent successfully' }, 200);
-}
+};
 
 const sendRequest = async (url, options) => {
   const response = await fetch(url, options);
   const data = await response.json();
   return data;
-}
+};
 
 const validateToken = async (env, token, ip) => {
   const formData = new FormData();
-  formData.append("secret", env.TURNSTILE_SECRET_KEY);
-  formData.append("response", token);
-  formData.append("remoteip", ip);
+  formData.append('secret', env.TURNSTILE_SECRET_KEY);
+  formData.append('response', token);
+  formData.append('remoteip', ip);
 
   const url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
   const options = {
-    method: "POST",
+    method: 'POST',
     body: formData,
   };
 
   const response = await sendRequest(url, options);
   return response.success;
-}
+};
+
+const formatEmailBody = (name, email, subject, message) => {
+  return `
+    <b>${name}</b><br>
+    ${email}<br><br>
+    <b>${subject}</b><br><br>
+    ${message}<br><br>
+    ---<br>
+    <i>This message was sent from your website's contact form</i>
+  `;
+};
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
+  // Mailgun API: https://documentation.mailgun.com/en/latest/api-sending.html#sending
+  // Mailgun API URI: https://api.eu.mailgun.net/v3/<YOUR_DOMAIN>/messages
   const formData = new FormData();
-  formData.append("from", env.MAILGUN_FROM);
-  formData.append("h:Sender", env.MAILGUN_FROM);
-  formData.append("to", env.MAILGUN_TO);
-  formData.append('h:Reply-To' , name + " <" + email + ">");
-  formData.append("subject", name + " - " + subject);
-  formData.append("html", "<b>" + name + "</b><br>" +
-                  email + "<br><br>" +
-                  "<b>" + subject + "</b><br><br>" +
-                  message + "<br><br>" +
-                  "---<br>" +
-                  "<i>This message was sent from your website's contact form</i>");
+  formData.append('from', env.MAILGUN_FROM);
+  formData.append('h:Sender', env.MAILGUN_FROM);
+  formData.append('to', env.MAILGUN_TO);
+  formData.append('h:Reply-To', name + ' <' + email + '>');
+  formData.append('subject', name + ' - ' + subject);
+  formData.append('html', formatEmailBody(name, email, subject, message));
 
-  const url = `https://${env.MAILGUN_BASE_URL}/v3/${env.MAILGUN_DOMAIN}/messages`;
+  const url = env.MAILGUN_API_URL;
   const options = {
-    method: "POST",
+    method: 'POST',
     headers: {
       Authorization: `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`,
     },
@@ -105,11 +119,13 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
 
   const response = await sendRequest(url, options);
   return response.message === 'Queued. Thank you.';
-}
+};
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
-  const url = "https://api.sendgrid.com/v3/mail/send";
-  const body = {
+  // SendGrid v3 API: https://sendgrid.com/docs/API_Reference/api_v3.html
+  // SendGrid v3 API URI: https://api.sendgrid.com/v3/mail/send
+  const url = env.SENDGRID_API_URL;
+  const body = JSON.stringify({
     personalizations: [
       {
         to: [{ email: env.SENDGRID_TO }],
@@ -120,29 +136,21 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
     reply_to: { email: email, name: name },
     content: [
       {
-        type: "text/html",
-        value: `
-          <b>${name}</b><br>
-          ${email}<br><br>
-          <b>${subject}</b><br><br>
-          ${message}<br><br>
-          ---<br>
-          <i>This message was sent from your website's contact form</i>
-        `,
+        type: 'text/html',
+        value: formatEmailBody(name, email, subject, message),
       },
     ],
-  };
+  });
 
   const options = {
-    method: "POST",
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: body,
   };
 
   const response = await sendRequest(url, options);
   return response.statusCode === 202;
 };
-
