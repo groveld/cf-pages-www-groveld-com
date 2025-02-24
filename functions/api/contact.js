@@ -50,7 +50,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithSendGrid(
+  const isEmailSent = await sendEmailWithMailgun(
     env,
     name,
     email,
@@ -113,6 +113,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
     method: 'POST',
     headers: {
       Authorization: `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: formData,
   };
