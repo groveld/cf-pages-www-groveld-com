@@ -82,8 +82,6 @@ const validateToken = async (env, token, ip) => {
 
 const formatEmailBody = (name, email, subject, message) => {
   return `
-    <b>FROM: ${env.MAILGUN_FROM}</b><br>
-    <b>TO: ${env.MAILGUN_TO}</b><br><br>
     <b>${name}</b><br>
     ${email}<br><br>
     <b>${subject}</b><br><br>
@@ -124,7 +122,7 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
         subject: `${name} - ${subject}`,
       },
     ],
-    from: { email: env.SENDGRID_FROM },
+    from: { email: env.MAILGUN_FROM },
     reply_to: { email: email, name: name },
     content: [
       {
