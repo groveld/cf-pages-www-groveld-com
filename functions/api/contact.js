@@ -135,6 +135,7 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
     personalizations: [
       {
         to: [{ email: env.SENDGRID_TO_EMAIL, name: env.SENDGRID_TO_NAME }],
+        bcc: [{ email: 'martin@groveld.com', name: 'Martin Groeneveld' }],
         subject: `${name} - ${subject}`,
       },
     ],
