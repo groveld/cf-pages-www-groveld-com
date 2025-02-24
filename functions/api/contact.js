@@ -35,8 +35,9 @@ const sanitizeInput = input => {
   return String(input).replace(/[&<>"'\n]/g, m => map[m]);
 };
 
-const jsonResponse = (data, status = 200) => {
-  return new Response(JSON.stringify(data), {
+const jsonResponse = (message, status = 200) => {
+  const responseData = {status: status, message: message};
+  return new Response(JSON.stringify(responseData), {
     status: status,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -58,20 +59,21 @@ const handleRequest = async ({ request, env }) => {
   let ip = request.headers.get('CF-Connecting-IP');
 
   if (!name || !email || !subject || !message) {
-    return jsonResponse({ message: 'Missing required fields' }, 400);
+    return jsonResponse({ message: 'Missing required fields', status: 400 });
+
   }
 
   const isTokenValid = await validateToken(env, token, ip);
   if (!isTokenValid) {
-    return jsonResponse({ message: 'Invalid token' }, 403);
+    return jsonResponse({ message: 'Invalid token', status: 403 });
   }
 
   const isEmailSent = await sendEmailWithSendGrid(env, name, email, subject, message);
   if (!isEmailSent) {
-    return jsonResponse({ message: 'Error sending message' }, 500);
+    return jsonResponse({ message: 'Error sending message', status: 500 });
   }
 
-  return jsonResponse({ message: 'Message sent successfully' }, 200);
+  return jsonResponse({ message: 'Message sent successfully', status: 200 });
 };
 
 const sendRequest = async (url, options) => {
@@ -126,7 +128,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.message === 'Queued. Thank you.';
+  return response.success;
 };
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
@@ -158,5 +160,5 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.message === 'Queued. Thank you.';
+  return response.success;
 };
