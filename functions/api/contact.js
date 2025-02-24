@@ -50,7 +50,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse({ message: 'Invalid token' }, 403);
   }
 
-  const isEmailSent = await sendEmailWithSendGrid(
+  const isEmailSent = await sendEmailWithMailgun(
     env,
     name,
     email,
@@ -99,7 +99,7 @@ const formatEmailBody = (name, email, subject, message) => {
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   // Mailgun API: https://documentation.mailgun.com/en/latest/api-sending.html#sending
-  // Mailgun API URI: https://api.eu.mailgun.net/v3/<YOUR_DOMAIN>/messages
+  // Mailgun API URI: https://api.mailgun.net/v3/<YOUR_DOMAIN>/messages
   const formData = new FormData();
   formData.append('from', env.MAILGUN_FROM);
   formData.append('h:Sender', env.MAILGUN_FROM);
