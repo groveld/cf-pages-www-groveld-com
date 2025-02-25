@@ -168,5 +168,5 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return { ...response, formData: body };
+  return { ...response };
 };
