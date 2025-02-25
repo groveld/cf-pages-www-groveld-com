@@ -36,7 +36,11 @@ const sanitizeInput = input => {
 };
 
 const jsonResponse = (message, status = 200, data = {}) => {
-  return new Response(JSON.stringify({ status, message, data }), {
+  const responseBody = { status, message };
+  if (Object.keys(data).length > 0) {
+    responseBody.data = data;
+  }
+  return new Response(JSON.stringify(responseBody), {
     status: status,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -134,7 +138,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return { ...response };
+  return response;
 };
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
