@@ -78,7 +78,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse('Ongeldige token', 403);
   }
 
-  const emailResponse = await sendEmailWithSendGrid(env, name, email, subject, message);
+  const emailResponse = await sendEmailWithMailgun(env, name, email, subject, message);
   if (!emailResponse.success) {
     return jsonResponse('Fout bij verzenden', 500);
   }
