@@ -66,6 +66,7 @@ const handleRequest = async ({ request, env }) => {
     return jsonResponse('Invalid token', 403);
   }
 
+  const emailResponse = await sendEmailWithMailgun(env, name, email, subject, message);
   if (!emailResponse.success) {
     return jsonResponse('Error sending message', 500);
   }
