@@ -35,12 +35,8 @@ const sanitizeInput = input => {
   return String(input).replace(/[&<>"'\n]/g, m => map[m]);
 };
 
-const jsonResponse = (message, status = 200, data = {}) => {
-  const responseBody = { status, message };
-  if (Object.keys(data).length > 0) {
-    responseBody.data = data;
-  }
-  return new Response(JSON.stringify(responseBody), {
+const jsonResponse = (message, status = 200) => {
+  return new Response(JSON.stringify({ status, message }), {
     status: status,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -62,41 +58,24 @@ const handleRequest = async ({ request, env }) => {
   let ip = request.headers.get('CF-Connecting-IP');
 
   if (!name || !email || !subject || !message) {
-    return jsonResponse('Missing required fields', 400, {
-      formData: Object.fromEntries(sanitizedData.entries()),
-    });
+    return jsonResponse('Missing required fields', 400);
   }
 
   const isTokenValid = await validateToken(env, token, ip);
-  if (!isTokenValid) {
-    return jsonResponse('Invalid token', 403, {
-      formData: Object.fromEntries(sanitizedData.entries()),
-    });
+  if (!isTokenValid.success) {
+    return jsonResponse('Invalid token', 403);
   }
 
-  const emailResponse = await sendEmailWithSendGrid(env, name, email, subject, message);
-  return jsonResponse('Debug response', 200, {
-    formData: Object.fromEntries(sanitizedData.entries()),
-    emailResponse: emailResponse,
-  });
+  if (!emailResponse.success) {
+    return jsonResponse('Error sending message', 500);
+  }
 
-  // if (!emailResponse.success) {
-  //   return jsonResponse('Error sending message', 500, {
-  //     formData: Object.fromEntries(sanitizedData.entries()),
-  //     emailResponse: emailResponse,
-  //   });
-  // }
-
-  // return jsonResponse('Message sent successfully', 200, {
-  //   formData: Object.fromEntries(sanitizedData.entries()),
-  //   emailResponse: emailResponse,
-  // });
+  return jsonResponse('Message sent successfully', 200);
 };
 
 const sendRequest = async (url, options) => {
   const response = await fetch(url, options);
-  const data = await response.json();
-  return { success: response.ok, status: response.status, data: data };
+  return { success: response.ok, status: response.status };
 };
 
 const validateToken = async (env, token, ip) => {
@@ -112,7 +91,7 @@ const validateToken = async (env, token, ip) => {
   };
 
   const response = await sendRequest(url, options);
-  return response.data.success;
+  return response;
 };
 
 const formatEmailBody = (name, email, subject, message) => {
@@ -146,15 +125,6 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
 
   const response = await sendRequest(url, options);
   return response;
-  // Example response from Mailgun:
-  // "response": {
-  //   "success": true,
-  //   "status": 200,
-  //   "data": {
-  //     "id": "<20250225094411.669d06094be703fc@groveld.com>",
-  //     "message": "Queued. Thank you."
-  //   }
-  // }
 };
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
@@ -187,5 +157,4 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
 
   const response = await sendRequest(url, options);
   return response;
-  // Example response from SendGrid:
 };
