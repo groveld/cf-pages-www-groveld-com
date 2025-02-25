@@ -75,19 +75,22 @@ const handleRequest = async ({ request, env }) => {
   }
 
   const emailResponse = await sendEmailWithSendGrid(env, name, email, subject, message);
-  return emailResponse;
-
-  if (!emailResponse.success) {
-    return jsonResponse('Error sending message', 500, {
-      formData: Object.fromEntries(sanitizedData.entries()),
-      emailResponse: emailResponse,
-    });
-  }
-
-  return jsonResponse('Message sent successfully', 200, {
+  return jsonResponse('Debug response', 200, {
     formData: Object.fromEntries(sanitizedData.entries()),
     emailResponse: emailResponse,
   });
+
+  // if (!emailResponse.success) {
+  //   return jsonResponse('Error sending message', 500, {
+  //     formData: Object.fromEntries(sanitizedData.entries()),
+  //     emailResponse: emailResponse,
+  //   });
+  // }
+
+  // return jsonResponse('Message sent successfully', 200, {
+  //   formData: Object.fromEntries(sanitizedData.entries()),
+  //   emailResponse: emailResponse,
+  // });
 };
 
 const sendRequest = async (url, options) => {
