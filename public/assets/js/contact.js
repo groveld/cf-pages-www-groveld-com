@@ -22,7 +22,7 @@ const submitForm = async event => {
   contactForm.querySelectorAll('input, textarea').forEach(input => (input.disabled = true));
 
   // Change the button text to "Sending message..."
-  submitButton.textContent = 'Sending message...';
+  submitButton.textContent = 'Bericht versturen...';
   submitButton.className = 'btn btn-lg btn-primary disabled';
 
   // Send the form to the Cloudflare Workers API
