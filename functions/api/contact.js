@@ -14,6 +14,17 @@
 
 // Usage: https://yourdomain.com/api/contact
 
+const formatEmailBody = (name, email, subject, message) => {
+  return `
+    <b>${name}</b><br>
+    ${email}<br><br>
+    <b>${subject}</b><br><br>
+    ${message}<br><br>
+    ---<br>
+    <i>This message was sent from your website's contact form</i>
+  `;
+};
+
 export const onRequestPost = async context => {
   try {
     return await handleRequest(context);
@@ -94,17 +105,6 @@ const validateToken = async (env, token, ip) => {
 
   const response = await sendRequest(url, options);
   return response;
-};
-
-const formatEmailBody = (name, email, subject, message) => {
-  return `
-    <b>${name}</b><br>
-    ${email}<br><br>
-    <b>${subject}</b><br><br>
-    ${message}<br><br>
-    ---<br>
-    <i>This message was sent from your website's contact form</i>
-  `;
 };
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
