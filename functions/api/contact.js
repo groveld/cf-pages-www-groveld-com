@@ -78,13 +78,13 @@ const handleRequest = async ({ request, env }) => {
   if (!emailResponse.success) {
     return jsonResponse('Error sending message', 500, {
       formData: Object.fromEntries(sanitizedData.entries()),
-      emailResponse: emailResponse.data,
+      emailResponse: emailResponse,
     });
   }
 
   return jsonResponse('Message sent successfully', 200, {
     formData: Object.fromEntries(sanitizedData.entries()),
-    emailResponse: emailResponse.data,
+    emailResponse: emailResponse,
   });
 };
 
