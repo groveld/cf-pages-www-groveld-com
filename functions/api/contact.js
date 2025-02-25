@@ -14,9 +14,6 @@
 
 // Usage: https://yourdomain.com/api/contact
 
-import fs from 'fs';
-import path from 'path';
-
 export const onRequestPost = async context => {
   try {
     return await handleRequest(context);
@@ -108,18 +105,6 @@ const formatEmailBody = (name, email, subject, message) => {
     ---<br>
     <i>This message was sent from your website's contact form</i>
   `;
-};
-
-const formatEmailBody2 = (name, email, subject, message) => {
-  const templatePath = path.join(__dirname, 'emailTemplate.html');
-  let template = fs.readFileSync(templatePath, 'utf8');
-
-  template = template.replace('{{name}}', name);
-  template = template.replace('{{email}}', email);
-  template = template.replace('{{subject}}', subject);
-  template = template.replace('{{message}}', message);
-
-  return template;
 };
 
 const sendEmailWithMailgun = async (env, name, email, subject, message) => {
