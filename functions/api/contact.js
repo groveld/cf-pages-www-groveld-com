@@ -70,7 +70,7 @@ const handleRequest = async ({ request, env }) => {
     });
   }
 
-  const emailResponse = await sendEmailWithSendGrid(env, name, email, subject, message);
+  const emailResponse = await sendEmailWithMailgun(env, name, email, subject, message);
   if (!emailResponse.success) {
     return jsonResponse('Error sending message', 500, {
       formData: Object.fromEntries(sanitizedData.entries()),
@@ -134,7 +134,7 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
   };
 
   const response = await sendRequest(url, options);
-  return response;
+  return { ...response };
 };
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
