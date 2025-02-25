@@ -36,7 +36,8 @@ const sanitizeInput = input => {
 };
 
 const jsonResponse = (message, status = 200) => {
-  return new Response(JSON.stringify({ status, message }), {
+  const success = status >= 200 && status < 300;
+  return new Response(JSON.stringify({ success, status, message }), {
     status: status,
     headers: { 'Content-Type': 'application/json' },
   });
