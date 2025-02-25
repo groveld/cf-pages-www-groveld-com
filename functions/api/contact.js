@@ -29,7 +29,7 @@ export const onRequestPost = async context => {
   try {
     return await handleRequest(context);
   } catch (err) {
-    return jsonResponse('Something went wrong', 500);
+    return jsonResponse('Er is iets misgegaan', 500);
   }
 };
 
@@ -70,20 +70,20 @@ const handleRequest = async ({ request, env }) => {
   let ip = request.headers.get('CF-Connecting-IP');
 
   if (!name || !email || !subject || !message) {
-    return jsonResponse('Missing required fields', 400);
+    return jsonResponse('Ontbrekende verplichte velden', 400);
   }
 
   const isTokenValid = await validateToken(env, token, ip);
   if (!isTokenValid.success) {
-    return jsonResponse('Invalid token', 403);
+    return jsonResponse('Ongeldige token', 403);
   }
 
   const emailResponse = await sendEmailWithSendGrid(env, name, email, subject, message);
   if (!emailResponse.success) {
-    return jsonResponse('Error sending message', 500);
+    return jsonResponse('Fout bij verzenden', 500);
   }
 
-  return jsonResponse('Message sent successfully', 200);
+  return jsonResponse('Bericht succesvol verzonden', 200);
 };
 
 const sendRequest = async (url, options) => {
