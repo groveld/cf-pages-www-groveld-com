@@ -74,7 +74,9 @@ const handleRequest = async ({ request, env }) => {
     });
   }
 
-  const emailResponse = await sendEmailWithMailgun(env, name, email, subject, message);
+  const emailResponse = await sendEmailWithSendGrid(env, name, email, subject, message);
+  return emailResponse;
+
   if (!emailResponse.success) {
     return jsonResponse('Error sending message', 500, {
       formData: Object.fromEntries(sanitizedData.entries()),
@@ -141,6 +143,15 @@ const sendEmailWithMailgun = async (env, name, email, subject, message) => {
 
   const response = await sendRequest(url, options);
   return response;
+  // Example response from Mailgun:
+  // "response": {
+  //   "success": true,
+  //   "status": 200,
+  //   "data": {
+  //     "id": "<20250225094411.669d06094be703fc@groveld.com>",
+  //     "message": "Queued. Thank you."
+  //   }
+  // }
 };
 
 const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
@@ -173,4 +184,5 @@ const sendEmailWithSendGrid = async (env, name, email, subject, message) => {
 
   const response = await sendRequest(url, options);
   return response;
+  // Example response from SendGrid:
 };
