@@ -21,7 +21,7 @@ const formatEmailBody = (name, email, subject, message) => {
     <b>${subject}</b><br><br>
     ${message}<br><br>
     ---<br>
-    <i>This message was sent from your website's contact form</i>
+    <i>Dit bericht is verzonden via het contactformulier op de website</i>
   `;
 };
 
